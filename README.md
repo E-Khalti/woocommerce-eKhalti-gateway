@@ -1,4 +1,4 @@
-# woocommerce-eKhalti-gateway
+# Woocommerce-eKhalti-payment-gateway
 
 For Woocommerce, the idea is users and developers should:
 1. Download WooCommerce plugin
