@@ -6,4 +6,4 @@ For Woocommerce, the idea is users and developers should:
 3. Enter your e-Khalti merchant id on your WooCommerce plugin settings
 
 
-You can also download the zip file of the plugin
+You can also download the zip file of the plugin: "woocommerce-eKhalti-gateway-master (2).zip"
