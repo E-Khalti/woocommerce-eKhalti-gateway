@@ -72,14 +72,12 @@ function wc_ekhalti_gateway_init() {
                 $plugin_dir = plugin_dir_url(__FILE__);
 
                 $this->id = 'ekhaltigateway';
-                $this->icon = " ";
+                $this->icon = plugins_url('images/logo.png', __FILE__);
                 $this->has_fields = true;
                 $this->method_title = __('e-khalti', 'ekhalti_gateway');
                 $this->method_description = __('e-khalti Payment Gateway', 'ekhalti_gateway');
-                //$this->payment_url = 'http://pay.ekhalti.local/api/payrequest';
-                $this->payment_url = 'https://merchant.e-khalti.com/api/payrequest';
-
-
+//                $this->payment_url = 'http://pay.ekhalti.local/api/payrequest';
+                $this->payment_url = 'http://merchant.e-khalti.com/api/payrequest';
                 // Method with all the options fields
                 $this->init_form_fields();
 
@@ -252,17 +250,11 @@ function wc_ekhalti_gateway_init() {
                 $body = wp_remote_retrieve_body($response);
                 $status = wp_remote_retrieve_response_code($response);
 
-//            if (is_wp_error($response)) {
-//                $error_message = $response->get_error_message();
-//                echo "Something went wrong: $error_message";
-//            } else {
-//                echo 'Response:<pre>';
-//                print_r($response);
-//                echo '</pre>';
-//            }
-
                 if ($status == 200) {
                     //return json_decode($body, true);
+                    $tmp_body = json_decode($body,true);
+                    $order->update_meta_data('_e_khalti_payment_ref', $tmp_body['ref']);
+                    $order->save();
                 }
                 return json_decode($body, true);
             }
@@ -355,20 +347,8 @@ function wc_ekhalti_gateway_init() {
                 global $woocommerce;
                 $order = new WC_Order($order_id);
 
-                //            $checkout_payment_url = $order->get_checkout_payment_url(true);
                 $payment = $this->initialize_payment($order_id);
-                //            print_r($payment);
-                //            die;
-                //            return array(
-                //                'result' => 'success',
-                //                'redirect' => add_query_arg(
-                //                        'order', $order->id, add_query_arg(
-                //                                'key', $order->order_key, $checkout_payment_url
-                //                        )
-                //                )
-                //            );
-//                print_r($payment);
-//                die;
+
                 if ($payment !== null && $payment['status'] == "200") {
                     return array(
                         'result' => 'success',
@@ -463,7 +443,6 @@ function wc_ekhalti_gateway_init() {
                     if ($order_id != '') {
                         try {
                             $order = new WC_Order($order_id);
-//                            $hash = $_REQUEST['hash'];
                             $status = $tmp['status'];
                             $trans_authorised = false;
 
@@ -495,11 +474,6 @@ function wc_ekhalti_gateway_init() {
                         $this->msg['class'] = 'error';
                         $this->msg['message'] = "Thank you for the order. However, the transaction has been declined now.";
                     }
-//                    echo "<pre>";
-//                    print_r($tmp);
-//                    print_r($this->msg);
-//                    print_r($_REQUEST);
-//                    die;
 
                     if (function_exists('wc_add_notice')) {
                         wc_add_notice($this->msg['message'], $this->msg['class']);
@@ -515,6 +489,8 @@ function wc_ekhalti_gateway_init() {
                     // @see: https://wordpress.org/support/topic/enabling-default-woocommerce-redirects/#post-9728440
                     if ('success' == $this->msg['class']) {
                         $redirect_url = $order->get_checkout_order_received_url();
+                        $order->update_meta_data('_e_khalti_payment_ekref', $_REQUEST['ekref']);
+                        $order->save();
                     } else {
                         $redirect_url = wc_get_checkout_url();
                     }
@@ -529,12 +505,8 @@ function wc_ekhalti_gateway_init() {
             public function ___process_admin_options() {
                 $post_data = $this->get_post_data();
                 $mode = 'live';
-//            if ($post_data['woocommerce_' . $this->id . '_sandbox'] == '1') {
-//                $mode = 'test';
-//            }
                 $this->merchant_id = $post_data['woocommerce_' . $this->id . '_merchant_id'];
                 $this->api_key = $post_data['woocommerce_' . $this->id . '_api_key'];
-//            $this->publishable_key = $post_data['woocommerce_' . $this->id . '_' . $mode . '_publishable_key'];
                 $env = $mode == 'live' ? 'Producton' : 'Sandbox';
                 if ($this->merchant_id == '' || $this->api_key == '') {
                     $settings = new WC_Admin_Settings();
