@@ -47,7 +47,6 @@ if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get
     return;
 }
 
-
 include_once( WPG_INCLUDE_DIR . '/class-wpg-payment.php' );
 
 
